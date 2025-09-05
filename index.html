@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hochzeits-Countdown</title>
+  <title>Hochzeit</title>
   <meta name="description" content="Kleiner Countdown bis zur Hochzeit" />
   <meta property="og:title" content="Hochzeits-Countdown" />
   <meta property="og:description" content="Countdown bis zur Hochzeit von Christina & Johannes" />
@@ -18,7 +18,7 @@
         --primary:#0457F6;
         --accent:#12F888;
         --bg:#ffffff;
-        --text:#222222;
+        --text:#000000;
         --surface:#ffffff;
         --panel:#ffffff;
         --border:#e6e6e6;
@@ -41,10 +41,9 @@
     header h1{
       font-size:clamp(1.6rem, 3vw, 2.4rem);
       margin:0 0 1.25rem; position:relative; z-index:1;
-      color:transparent;
-      background-image: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 32%, var(--gold-3) 64%, var(--gold-1) 100%);
-      -webkit-background-clip:text; background-clip:text;
+      color:#000;
     }
+    .emoji{ font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
     .gold-text{
       color:transparent;
       background-image: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 32%, var(--gold-3) 64%, var(--gold-1) 100%);
@@ -91,7 +90,7 @@
   <div class="wrap card" role="region" aria-live="polite">
     <img class="avatar" src="img/hz1.png" alt="Christina und Johannes" width="220" height="220" loading="eager" decoding="async" />
     <header>
-      <h1>🎉 Hochzeit von Christina & Johannes</h1>
+      <h1><span class="emoji" aria-hidden="true">🎉</span> Hochzeit von Christina & Johannes</h1>
     </header>
 
     <div class="timer" aria-label="Countdown">
