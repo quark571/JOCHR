@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hochzeits-Countdown</title>
+  <meta name="description" content="Kleiner Countdown bis zur Hochzeit" />
+  <meta property="og:title" content="Hochzeits-Countdown" />
+  <meta property="og:description" content="Countdown bis zur Hochzeit von Christina & Johannes" />
+  <meta name="theme-color" content="#d2f0e0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="googlebot" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Coves:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+      :root{
+        --primary:#0457F6;
+        --accent:#12F888;
+        --bg:#ffffff;
+        --text:#222222;
+        --surface:#ffffff;
+        --panel:#ffffff;
+        --border:#e6e6e6;
+        --muted:#f0f2f5;
+        /* Gold-Palette */
+        --gold-1:#fff5c7; /* Highlight */
+        --gold-2:#ffd56e; /* Light */
+        --gold-3:#c89b3c; /* Mid */
+        --gold-4:#8a6b1f; /* Deep */
+      }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+      body{
+        margin:0; font-family:"Coves", system-ui, sans-serif;
+        color:var(--text);
+        background: linear-gradient(to bottom, #d2f0e0 0%, #ffffff 60%);
+        display:grid; place-items:center; padding:2rem;
+      }
+    .wrap{ width:min(940px, 100%); text-align:center; position:relative; }
+    header h1{
+      font-size:clamp(1.6rem, 3vw, 2.4rem);
+      margin:0 0 1.25rem; position:relative; z-index:1;
+      color:transparent;
+      background-image: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 32%, var(--gold-3) 64%, var(--gold-1) 100%);
+      -webkit-background-clip:text; background-clip:text;
+    }
+    .gold-text{
+      color:transparent;
+      background-image: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 32%, var(--gold-3) 64%, var(--gold-1) 100%);
+      -webkit-background-clip:text; background-clip:text;
+    }
+      .card{
+        --avatar: clamp(140px, 28vw, 220px);
+        background:rgba(255,255,255,0.9);
+        -webkit-backdrop-filter:saturate(140%) blur(4px);
+        backdrop-filter:saturate(140%) blur(4px);
+        border-radius:1.25rem; padding:2rem; padding-top: calc(var(--avatar)*0.72 + 1.25rem);
+        box-shadow:0 10px 30px #00000012;
+        border:1px solid #ffffff;
+        position:relative;
+        overflow:visible;
+      }
+      .card header{ text-align:center; }
+      .avatar{
+        position:absolute; top:calc(var(--avatar)*-0.35); left:50%; transform:translateX(-50%);
+        width:var(--avatar); height:var(--avatar);
+        border-radius:50%; object-fit:contain; object-position:center;
+        border:5px solid #fff; box-shadow:0 10px 24px #00000022; z-index:2; background:#fff;
+      }
+    .timer{ display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; position:relative; z-index:1 }
+    @media (max-width: 720px){ .timer{ grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 380px){ .timer{ grid-template-columns: 1fr; } }
+      .unit{ background:#fff; border-radius:1rem; padding:1.25rem; border:1px solid var(--border); }
+    .value{ font-size:clamp(2rem, 6vw, 3.2rem); font-weight:700; line-height:1; }
+    .label{ font-size:.9rem; letter-spacing:.08em; text-transform:uppercase; opacity:.65; margin-top:.4rem }
+    .cta{ margin-top:2rem; display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; position:relative; z-index:1 }
+      .btn{ --h:48px; height:var(--h); padding:0 1.1rem; border-radius:999px; border:1px solid var(--border); background:#fff; color:var(--text); text-decoration:none; display:inline-flex; align-items:center; gap:.5rem; font-weight:600; cursor:pointer }
+    .btn.primary{ background:var(--primary); color:#fff; border-color:transparent }
+    .heart{ color:var(--accent); font-size:1.2em }
+    footer{ margin-top:2rem; opacity:.6; font-size:.85rem; position:relative; z-index:1 }
+  </style>
+</head>
+<body>
+  <div id="app"
+       data-bride="Christina"
+       data-groom="Johannes"
+       data-date="2025-09-20T11:30:00"
+  ></div>
+
+  <div class="wrap card" role="region" aria-live="polite">
+    <img class="avatar" src="img/hz1.png" alt="Christina und Johannes" width="220" height="220" loading="eager" decoding="async" />
+    <header>
+      <h1>🎉 Hochzeit von Christina & Johannes</h1>
+    </header>
+
+    <div class="timer" aria-label="Countdown">
+      <div class="unit" aria-label="Tage"><div class="value" id="d">–</div><div class="label">Tage</div></div>
+      <div class="unit" aria-label="Stunden"><div class="value" id="h">–</div><div class="label">Stunden</div></div>
+      <div class="unit" aria-label="Minuten"><div class="value" id="m">–</div><div class="label">Minuten</div></div>
+      <div class="unit" aria-label="Sekunden"><div class="value" id="s">–</div><div class="label">Sekunden</div></div>
+    </div>
+
+    <div class="cta">
+      <button class="btn primary" id="confettiBtn" type="button">Konfetti 🎊</button>
+    </div>
+
+    <footer>
+      <span id="status"></span>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      const app = document.getElementById('app');
+      const dateISO = app.dataset.date || new Date(new Date().getFullYear(),8,20,11,30,0).toISOString();
+      const target = new Date(dateISO);
+
+      const dEl = document.getElementById('d');
+      const hEl = document.getElementById('h');
+      const mEl = document.getElementById('m');
+      const sEl = document.getElementById('s');
+      const statusEl = document.getElementById('status');
+
+      function tick(){
+        const t = target - new Date();
+        if (t <= 0){
+          dEl.textContent = '00'; hEl.textContent = '00'; mEl.textContent = '00'; sEl.textContent = '00';
+          statusEl.textContent = 'Es ist so weit – herzlichen Glückwunsch!';
+          confetti();
+          clearInterval(timer);
+          return;
+        }
+        const days = Math.floor(t / (1000*60*60*24));
+        const hours = Math.floor((t / (1000*60*60)) % 24);
+        const minutes = Math.floor((t / (1000*60)) % 60);
+        const seconds = Math.floor((t / 1000) % 60);
+        dEl.textContent = String(days).padStart(2,'0');
+        hEl.textContent = String(hours).padStart(2,'0');
+        mEl.textContent = String(minutes).padStart(2,'0');
+        sEl.textContent = String(seconds).padStart(2,'0');
+      }
+      const timer = setInterval(tick, 1000); tick();
+
+      document.getElementById('confettiBtn').addEventListener('click', (e)=>{ e.preventDefault(); confetti(); });
+
+      function confetti(){
+        const N = 120; const frag = document.createDocumentFragment();
+        for(let i=0;i<N;i++){
+          const s = document.createElement('div');
+          const size = 6 + Math.random()*8;
+          const left = Math.random()*100;
+          const dur = 2 + Math.random()*2;
+          s.style.cssText = `position:fixed;top:-10px;left:${left}vw;width:${size}px;height:${size}px;background:hsl(${Math.random()*360} 90% 60%);border-radius:2px;opacity:.9;transform:rotate(0deg);animation:fall ${dur}s linear ${Math.random()}s forwards`;
+          frag.appendChild(s);
+          setTimeout(()=>s.remove(), (dur+3)*1000);
+        }
+        document.body.appendChild(frag);
+      }
+
+      
+
+      // Poltern- und Scherben-Funktionen entfernt
+
+      const style = document.createElement('style');
+      style.textContent = `
+      @keyframes fall{to{transform:translateY(110vh) rotate(720deg); opacity:0}}
+      `;
+      document.head.appendChild(style);
+
+      
+    })();
+  </script>
+</body>
+</html>
