@@ -67,6 +67,17 @@
         border-radius:50%; object-fit:contain; object-position:center;
         border:5px solid #fff; box-shadow:0 10px 24px #00000022; z-index:2; background:#fff;
       }
+      .avatar.married{
+        width:clamp(240px, 48vw, 360px);
+        height:clamp(160px, 32vw, 260px);
+        border-radius:1.5rem;
+        top:clamp(-140px, -16vw, -96px);
+        object-fit:cover; object-position:center;
+        box-shadow:0 18px 36px rgba(0,0,0,0.18);
+      }
+      .card.married{
+        padding-top:calc(var(--avatar)*0.52 + 2rem);
+      }
     .timer{ display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; position:relative; z-index:1 }
     @media (max-width: 720px){ .timer{ grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 380px){ .timer{ grid-template-columns: 1fr; } }
@@ -88,7 +99,7 @@
   ></div>
 
   <div class="wrap card" role="region" aria-live="polite">
-    <img class="avatar" src="img/hz1.png" alt="Christina und Johannes" width="220" height="220" loading="eager" decoding="async" />
+    <img class="avatar" src="img/hz1.png" alt="Christina und Johannes" width="220" height="220" loading="eager" decoding="async" data-married-src="img/hz2.png" data-married-alt="Christina und Johannes - Hochzeit" />
     <header>
       <h1><span class="emoji" aria-hidden="true">🎉</span> Hochzeit von Christina & Johannes</h1>
     </header>
@@ -120,28 +131,71 @@
       const mEl = document.getElementById('m');
       const sEl = document.getElementById('s');
       const statusEl = document.getElementById('status');
+      const headingEl = document.querySelector('.card header h1');
+      const initialHeading = headingEl ? headingEl.textContent : '';
+      const marriedHeading = 'Verheiratet seit';
+      const confettiBtn = document.getElementById('confettiBtn');
+      const ctaEl = document.querySelector('.cta');
+      const cardEl = document.querySelector('.card');
+      const avatarEl = document.querySelector('.avatar');
+      const initialAvatarSrc = avatarEl ? avatarEl.getAttribute('src') : '';
+      const initialAvatarAlt = avatarEl ? avatarEl.getAttribute('alt') : '';
+      const marriedAvatarSrc = avatarEl ? (avatarEl.dataset.marriedSrc || initialAvatarSrc) : initialAvatarSrc;
+      const marriedAvatarAlt = avatarEl ? (avatarEl.dataset.marriedAlt || initialAvatarAlt) : initialAvatarAlt;
 
-      function tick(){
-        const t = target - new Date();
-        if (t <= 0){
-          dEl.textContent = '00'; hEl.textContent = '00'; mEl.textContent = '00'; sEl.textContent = '00';
-          statusEl.textContent = 'Es ist so weit – herzlichen Glückwunsch!';
-          confetti();
-          clearInterval(timer);
-          return;
-        }
-        const days = Math.floor(t / (1000*60*60*24));
-        const hours = Math.floor((t / (1000*60*60)) % 24);
-        const minutes = Math.floor((t / (1000*60)) % 60);
-        const seconds = Math.floor((t / 1000) % 60);
+      let fireworkBtn = null;
+      let celebrated = false;
+      let marriedVisual = false;
+
+      function breakdown(ms){
+        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        const days = Math.floor(totalSeconds / (60 * 60 * 24));
+        const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60));
+        const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+        const seconds = totalSeconds % 60;
+        return { days, hours, minutes, seconds };
+      }
+
+      function renderValues({ days, hours, minutes, seconds }){
         dEl.textContent = String(days).padStart(2,'0');
         hEl.textContent = String(hours).padStart(2,'0');
         mEl.textContent = String(minutes).padStart(2,'0');
         sEl.textContent = String(seconds).padStart(2,'0');
       }
-      const timer = setInterval(tick, 1000); tick();
 
-      document.getElementById('confettiBtn').addEventListener('click', (e)=>{ e.preventDefault(); confetti(); });
+      function tick(){
+        const now = new Date();
+        if (now >= target){
+          const elapsed = breakdown(now - target);
+          renderValues(elapsed);
+          if (headingEl && headingEl.textContent !== marriedHeading){
+            headingEl.textContent = marriedHeading;
+          }
+          setMarriedVisualState(true);
+          showFireworkButton();
+          statusEl.textContent = '';
+          if (!celebrated){
+            confetti();
+            celebrated = true;
+          }
+          return;
+        }
+        const remaining = breakdown(target - now);
+        renderValues(remaining);
+        if (headingEl && headingEl.textContent !== initialHeading){
+          headingEl.textContent = initialHeading;
+        }
+        setMarriedVisualState(false);
+        hideFireworkButton();
+        statusEl.textContent = '';
+      }
+
+      const timer = setInterval(tick, 1000);
+      tick();
+
+      if (confettiBtn){
+        confettiBtn.addEventListener('click', (e)=>{ e.preventDefault(); confetti(); });
+      }
 
       function confetti(){
         const N = 120; const frag = document.createDocumentFragment();
@@ -157,13 +211,216 @@
         document.body.appendChild(frag);
       }
 
-      
+      function showFireworkButton(){
+        if (!ctaEl) return;
+        if (!fireworkBtn){
+          fireworkBtn = document.createElement('button');
+          fireworkBtn.className = 'btn';
+          fireworkBtn.id = 'fireworkBtn';
+          fireworkBtn.type = 'button';
+          fireworkBtn.textContent = 'Feuerwerk';
+          fireworkBtn.addEventListener('click', (e)=>{ e.preventDefault(); launchFirework(); });
+        }
+        if (!fireworkBtn.isConnected){
+          ctaEl.appendChild(fireworkBtn);
+        }
+      }
+
+      function hideFireworkButton(){
+        if (fireworkBtn && fireworkBtn.isConnected){
+          fireworkBtn.remove();
+        }
+      }
+
+      function setMarriedVisualState(isMarried){
+        if (!avatarEl && !cardEl) return;
+        if (isMarried === marriedVisual) return;
+        marriedVisual = isMarried;
+        if (avatarEl){
+          if (isMarried){
+            if (marriedAvatarSrc && avatarEl.getAttribute('src') !== marriedAvatarSrc){
+              avatarEl.setAttribute('src', marriedAvatarSrc);
+            }
+            if (marriedAvatarAlt){
+              avatarEl.setAttribute('alt', marriedAvatarAlt);
+            }
+            avatarEl.classList.add('married');
+          } else {
+            if (initialAvatarSrc){
+              avatarEl.setAttribute('src', initialAvatarSrc);
+            }
+            if (initialAvatarAlt){
+              avatarEl.setAttribute('alt', initialAvatarAlt);
+            }
+            avatarEl.classList.remove('married');
+          }
+        }
+        if (cardEl){
+          cardEl.classList.toggle('married', isMarried);
+        }
+      }
+
+      function launchFirework(){
+
+        const launchX = 20 + Math.random() * 60;
+
+        const peak = 25 + Math.random() * 45;
+
+        const rocket = document.createElement('div');
+
+        rocket.className = 'firework-rocket';
+
+        rocket.style.left = `${launchX}vw`;
+
+        rocket.style.top = '105vh';
+
+        document.body.appendChild(rocket);
+
+
+
+        const trail = document.createElement('div');
+
+        trail.className = 'firework-trail';
+
+        rocket.appendChild(trail);
+
+
+
+        const travelDuration = 900 + Math.random() * 200;
+
+        const animation = rocket.animate([
+
+          { top: '105vh', opacity: 1 },
+
+          { top: `${peak}vh`, opacity: 1 }
+
+        ], { duration: travelDuration, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+
+
+
+        const finalize = () => {
+
+          createExplosion(launchX, peak);
+
+          rocket.remove();
+
+        };
+
+
+
+        if (animation && animation.finished){
+
+          animation.finished.then(finalize).catch(()=>finalize());
+
+        } else {
+
+          setTimeout(finalize, travelDuration);
+
+        }
+
+      }
+
+
+
+      function createExplosion(leftVW, topVH){
+
+        const originX = (leftVW / 100) * window.innerWidth;
+
+        const originY = (topVH / 100) * window.innerHeight;
+
+
+
+        const container = document.createElement('div');
+
+        container.className = 'firework-explosion';
+
+        container.style.left = `${originX}px`;
+
+        container.style.top = `${originY}px`;
+
+        container.style.transform = 'translate(-50%, -50%)';
+
+        document.body.appendChild(container);
+
+
+
+        const flash = document.createElement('div');
+
+        flash.className = 'firework-flash';
+
+        container.appendChild(flash);
+
+        flash.addEventListener('animationend', ()=>flash.remove(), { once: true });
+
+
+
+        const particles = 30;
+
+        for (let i = 0; i < particles; i++){
+
+          const particle = document.createElement('div');
+
+          particle.className = 'firework-particle';
+
+          const angle = (Math.PI * 2 * i) / particles;
+
+          const distance = 120 + Math.random() * 90;
+
+          const jitter = (Math.random() - 0.5) * 0.6;
+
+          const dx = Math.cos(angle + jitter) * distance;
+
+          const dy = Math.sin(angle + jitter) * distance;
+
+          const duration = 900 + Math.random() * 500;
+
+          particle.style.setProperty('--tx', `${dx}px`);
+
+          particle.style.setProperty('--ty', `${dy}px`);
+
+          particle.style.setProperty('--dur', `${duration}ms`);
+
+          particle.style.setProperty('--hue', `${Math.floor(Math.random() * 360)}`);
+
+          container.appendChild(particle);
+
+          particle.addEventListener('animationend', ()=>particle.remove(), { once: true });
+
+        }
+
+
+
+        setTimeout(()=>container.remove(), 1600);
+
+      }
+
+
+
+
+
+            
 
       // Poltern- und Scherben-Funktionen entfernt
 
       const style = document.createElement('style');
       style.textContent = `
+
       @keyframes fall{to{transform:translateY(110vh) rotate(720deg); opacity:0}}
+
+      .firework-rocket{position:fixed;width:10px;height:24px;background:linear-gradient(180deg,#ffffff 0%,#ff9a00 55%,#ff0040 100%);border-radius:6px;box-shadow:0 0 12px rgba(255,255,255,0.7);pointer-events:none;z-index:6;}
+
+      .firework-trail{position:absolute;bottom:-24px;left:50%;width:6px;height:24px;background:linear-gradient(180deg,rgba(255,220,120,0.9)0%,rgba(255,80,0,0.2)100%);transform:translateX(-50%);filter:blur(.8px);}
+
+      .firework-explosion{position:fixed;pointer-events:none;z-index:6;left:0;top:0;width:0;height:0;}
+
+      .firework-flash{position:absolute;width:160px;height:160px;border-radius:50%;pointer-events:none;mix-blend-mode:screen;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(255,255,255,0.9)0%,rgba(255,220,120,0.6)35%,rgba(255,0,64,0)70%);animation:firework-flash 540ms ease-out forwards;}
+
+      .firework-particle{position:absolute;width:10px;height:10px;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:hsl(var(--hue,0) 90% 60%);transform:translate(0,0) scale(1);animation:firework-particle var(--dur,1100ms) ease-out forwards;}
+
+      @keyframes firework-flash{0%{opacity:.9;transform:translate(-50%,-50%) scale(.2);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2);}}
+
+      @keyframes firework-particle{0%{opacity:1;transform:translate(0,0) scale(1);}80%{opacity:.8;}100%{opacity:0;transform:translate(var(--tx,0),var(--ty,0)) scale(0);}}
+
       `;
       document.head.appendChild(style);
 
